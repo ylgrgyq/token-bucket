@@ -11,7 +11,7 @@ class SynchronizedTokenBucket(initToken: Int, capacity: Int, tokenSupplyPolicy: 
     tokenTank = if (tokensSupplied + tokenTank >= capacity) capacity else tokensSupplied + tokenTank
   }
 
-  def tryGet(tokenInNeed: Int) = {
+  def tryConsume(tokenInNeed: Int) = {
     this.synchronized {
       refill(tokenSupplyPolicy.supplyToken(this))
 

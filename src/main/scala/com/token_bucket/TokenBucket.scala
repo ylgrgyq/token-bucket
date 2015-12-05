@@ -6,9 +6,8 @@ package com.token_bucket
   */
 trait TokenBucket {
 
-  def tryGet(tokenInNeed: Int)
+  def tryConsume() = tryConsume(1)
+
+  def tryConsume(tokenInNeed: Int): Boolean
 }
 
-object TokenBucket {
-
-}
