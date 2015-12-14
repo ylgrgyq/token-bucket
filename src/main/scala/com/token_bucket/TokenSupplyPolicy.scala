@@ -5,7 +5,9 @@ package com.token_bucket
   * Author: ylgrgyq
   */
 trait TokenSupplyPolicy {
-  def tankNotFull(bucket: TokenBucket)
+  def tankNotFull(now: Long)
 
-  def supplyToken(bucket: TokenBucket): Int
+  def tankFull(now: Long)
+
+  def supplyToken(now: Long): Int
 }

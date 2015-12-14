@@ -6,7 +6,7 @@ package com.token_bucket
   */
 trait TokenBucket {
 
-  def tryConsume() = tryConsume(1)
+  def tryConsume(): Boolean = tryConsume(1)
 
   def tryConsume(tokenInNeed: Int): Boolean
 }

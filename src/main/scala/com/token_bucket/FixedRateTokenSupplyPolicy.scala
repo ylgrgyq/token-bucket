@@ -6,21 +6,38 @@ import java.util.concurrent.TimeUnit
   * Created on 15/12/5.
   * Author: ylgrgyq
   */
-class FixedRateTokenSupplyPolicy(capacity: Int, fillRate: Int, unit: TimeUnit) extends TokenSupplyPolicy {
+class FixedRateTokenSupplyPolicy(tokensPerPeriod: Int, period: Int, unit: TimeUnit) extends TokenSupplyPolicy {
+  require(tokensPerPeriod >= 0, "Tokens supplied per period should not negative")
+  require(period > 0, "Token supply period should not negative")
+  require(unit != null)
 
-  var fillStartTime: Long = 0
+  val periodInNano = unit.toNanos(period)
+  var lastFillTime: Long = 0
 
-  def tankNotFull(bucket: TokenBucket): Unit = {
-    fillStartTime = System.nanoTime()
+  def tankNotFull(now: Long) = {
+    require(now > 0, "now should not be negative")
+
+    lastFillTime = now
   }
 
-  def supplyToken(bucket: TokenBucket): Int = {
-    val current = System.nanoTime()
+  def tankFull(now: Long) = {
+    require(now > 0, "now should not be negative")
 
-    val tokenNeedToFill = ((current - fillStartTime) / unit.toNanos(1)).toInt * fillRate
+    lastFillTime = 0
+  }
 
-    fillStartTime = current
+  def supplyToken(now: Long): Int = {
+    require(now > 0, "now should not be negative")
 
-    tokenNeedToFill
+    if (lastFillTime == 0) {
+      0
+    } else {
+      val periods = math.min(0, ((now - lastFillTime) / periodInNano).toInt)
+
+      val tokensSupplied = periods * tokensPerPeriod
+      lastFillTime += periods * period
+
+      tokensSupplied
+    }
   }
 }
