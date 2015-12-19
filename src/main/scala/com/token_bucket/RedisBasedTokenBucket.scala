@@ -1,22 +1,21 @@
 package com.token_bucket
 
-import java.nio.ByteOrder
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{ActorSystem, ActorRefFactory}
 import akka.util.ByteString
 import redis.RedisClient
 import redis.api.Limit
 
-import scala.concurrent.{ExecutionContext, Future, Await}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 /**
   * Created on 15/12/14.
   * Author: ylgrgyq
   */
 
-class RedisBasedTokenBucket(id: String, capacity: Int, interval: Long, unit: TimeUnit, minInterval: Long, redis: RedisClient) extends TokenBucket{
+class RedisBasedTokenBucket(namespace: String, id: String, capacity: Int, interval: Long, minInterval: Long, unit: TimeUnit, redis: RedisClient) extends TokenBucket{
+  private val redisKey = s"$namespace-$id"
 
   def tryConsume(tokenInNeed: Int) = {
     throw new UnsupportedOperationException
@@ -27,7 +26,7 @@ class RedisBasedTokenBucket(id: String, capacity: Int, interval: Long, unit: Tim
     val lowerWindowEdge = now - unit.toNanos(interval)
 
     val transaction = redis.transaction()
-    transaction.zremrangebyscore(id, Limit(Double.MinValue), Limit(lowerWindowEdge))
+    transaction.zremrangebyscore(redisKey, Limit(Double.MinValue), Limit(lowerWindowEdge))
     val total = transaction.zcard(id)
     val lastReqTime:Future[Seq[ByteString]] = transaction.zrevrangebyscore(id, Limit(Double.NegativeInfinity), Limit(Double.PositiveInfinity), Some(0L, 1L))
     transaction.zadd(id, (now, now))

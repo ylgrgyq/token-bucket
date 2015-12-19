@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit
   * Created on 15/12/5.
   * Author: ylgrgyq
   */
-class FixedRateTokenSupplyPolicy(tokensPerPeriod: Int, period: Int, unit: TimeUnit) extends TokenSupplyPolicy {
+class FixedRateTokenSupplyPolicy(tokensPerPeriod: Long, period: Long, unit: TimeUnit) extends TokenSupplyPolicy {
   require(tokensPerPeriod >= 0, "Tokens supplied per period should not negative")
   require(period > 0, "Token supply period should not negative")
   require(unit != null)
@@ -37,7 +37,7 @@ class FixedRateTokenSupplyPolicy(tokensPerPeriod: Int, period: Int, unit: TimeUn
       val tokensSupplied = periods * tokensPerPeriod
       lastFillTime += periods * period
 
-      tokensSupplied
+      tokensSupplied.toInt
     }
   }
 }

@@ -1,10 +1,14 @@
 package com.token_bucket
 
+import java.util.concurrent.TimeUnit
+
 /**
   * Created on 15/12/3.
   * Author: ylgrgyq
   */
-class MemoryBasedTokenBucket(capacity: Int, minInterval: Long, tokenSupplyPolicy: TokenSupplyPolicy) extends TokenBucket {
+class MemoryBasedTokenBucket(capacity: Int, minInterval: Long, interval: Long, unit: TimeUnit) extends TokenBucket {
+  private val tokenSupplyPolicy = new FixedRateTokenSupplyPolicy(Math.ceil(capacity.toDouble / interval).toLong, interval, unit)
+
   require(capacity > 0, "Bucket Capacity should bigger than 0")
   require(minInterval >= 0, "Minimum interval time should not negative")
   require(tokenSupplyPolicy != null, "Please give me a token supply policy")
@@ -14,7 +18,7 @@ class MemoryBasedTokenBucket(capacity: Int, minInterval: Long, tokenSupplyPolicy
 
   private def refill(now: Long, tokensSupplied: Int) = {
     tokensCount = math.min(capacity, tokensSupplied + tokensCount)
-    if (tokensCount == capacity){
+    if (tokensCount == capacity) {
       tokenSupplyPolicy.tankFull(now)
     }
   }
@@ -23,13 +27,13 @@ class MemoryBasedTokenBucket(capacity: Int, minInterval: Long, tokenSupplyPolicy
     require(tokenInNeed > 0)
 
     val now = System.nanoTime()
-    if (now - lastConsumeTime < minInterval){
+    if (now - lastConsumeTime < minInterval) {
       false
     } else {
       refill(now, tokenSupplyPolicy.supplyToken(now))
 
-      if (tokensCount >= tokenInNeed) {
-        tokensCount -= tokenInNeed
+      tokensCount -= tokenInNeed
+      if (tokensCount >= 0) {
         tokenSupplyPolicy.tankNotFull(now)
         lastConsumeTime = now
         true
