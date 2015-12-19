@@ -12,7 +12,7 @@ import org.scalatest.junit.JUnitRunner
 class SynchronizedTokenBucketSuite extends FunSuite{
   test(""){
     val p = new FixedRateTokenSupplyPolicy(2, 2, TimeUnit.SECONDS)
-    val v = new SynchronizedTokenBucket(2, 2, p)
+    val v = new MemoryBasedTokenBucket(2, 2, p)
     val start = System.nanoTime()
     assert(v.tryConsume(1))
     assert(v.tryConsume(1))

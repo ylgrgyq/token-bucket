@@ -4,7 +4,7 @@ package com.token_bucket
   * Created on 15/12/3.
   * Author: ylgrgyq
   */
-class SynchronizedTokenBucket(capacity: Int, minInterval: Long, tokenSupplyPolicy: TokenSupplyPolicy) extends TokenBucket {
+class MemoryBasedTokenBucket(capacity: Int, minInterval: Long, tokenSupplyPolicy: TokenSupplyPolicy) extends TokenBucket {
   require(capacity > 0, "Bucket Capacity should bigger than 0")
   require(minInterval >= 0, "Minimum interval time should not negative")
   require(tokenSupplyPolicy != null, "Please give me a token supply policy")

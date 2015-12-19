@@ -27,5 +27,6 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % "2.2.4" % "test",
   "com.novocode" % "junit-interface" % "0.11" % "test",
   "com.ning" % "async-http-client" % "1.9.31",
-  "org.jsoup" % "jsoup" % "1.8.3"
+  "org.jsoup" % "jsoup" % "1.8.3",
+  "com.github.etaty" %% "rediscala" % "1.6.0-SNAPSHOT"
 )
