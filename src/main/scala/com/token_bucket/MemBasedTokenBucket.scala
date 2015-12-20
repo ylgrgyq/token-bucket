@@ -12,7 +12,7 @@ import scala.collection.JavaConverters._
   * Author: ylgrgyq
   */
 
-class GroupedMemBasedTokenBucket(namespace: String, capacity: Int, interval: Long, minInterval: Long = 0, unit: TimeUnit = TimeUnit.SECONDS, payForFailedTry: Boolean = true)
+class GroupedMemBasedTokenBucket(namespace: String, capacity: Int, interval: Long, unit: TimeUnit = TimeUnit.SECONDS, minInterval: Long = 0, payForFailedTry: Boolean = true)
                                 (implicit scheduler: Scheduler) extends GropuedTokenBucket {
   require(capacity > 0, "Bucket Capacity should bigger than 0")
   require(interval > 0, "Interval time should bigger than 0")
@@ -46,7 +46,7 @@ class GroupedMemBasedTokenBucket(namespace: String, capacity: Int, interval: Lon
     buckets.get(k) match {
       case Some(bucket) => bucket.tryConsume(tokenInNeed)
       case _ =>
-        val bucket = new MemBasedTokenBucket(capacity, interval, minInterval, unit, payForFailedTry)
+        val bucket = new MemBasedTokenBucket(capacity, interval, unit, minInterval, payForFailedTry)
         buckets(k) = bucket
         bucket.tryConsume(tokenInNeed)
     }
@@ -60,7 +60,7 @@ class GroupedMemBasedTokenBucket(namespace: String, capacity: Int, interval: Lon
   }
 }
 
-class MemBasedTokenBucket(capacity: Int, interval: Long, minInterval: Long = 0, unit: TimeUnit = TimeUnit.SECONDS, payForFailedTry: Boolean = true) extends TokenBucket {
+class MemBasedTokenBucket(capacity: Int, interval: Long, unit: TimeUnit = TimeUnit.SECONDS, minInterval: Long = 0, payForFailedTry: Boolean = true) extends TokenBucket {
   require(capacity > 0, "Bucket Capacity should bigger than 0")
   require(interval > 0, "Interval time should bigger than 0")
   require(minInterval >= 0, "Minimum interval time should not negative")
