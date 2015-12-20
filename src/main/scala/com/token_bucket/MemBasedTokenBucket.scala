@@ -15,24 +15,32 @@ import scala.collection.JavaConverters._
 class GroupedRedisBasedTokenBucket(namespace: String, capacity: Int, interval: Long, minInterval: Long = 0, unit: TimeUnit = TimeUnit.SECONDS, payForFailedTry: Boolean = true)
                                   (implicit scheduler: Scheduler) extends GropuedTokenBucket {
   private val buckets = new ConcurrentHashMap[String, MemBasedTokenBucket]().asScala
-  private val timeouts = collection.mutable.Map[String, Cancellable]()
+  private val timeouts = new ConcurrentHashMap[String, Cancellable]().asScala
 
   def key(id: String) = s"$namespace-$id"
 
+  def setTimeout(k:String) ={
+    timeouts(k) = scheduler.scheduleOnce(FiniteDuration(interval, unit)){
+      buckets.remove(k)
+      timeouts.remove(k)
+    }
+  }
+
   override def tryConsume(id: String, tokenInNeed: Int): Boolean = this.synchronized {
     val k = key(id)
-    buckets.get(k) match {
-      case Some(bucket) =>
-        timeouts.get(k) match {
-          case Some(cancelHandle) => cancelHandle.cancel()
-          case _ => _
-        }
 
-        bucket.tryConsume(tokenInNeed)
+    timeouts.get(k) match {
+      case Some(cancelHandle) =>
+        cancelHandle.cancel()
+      case _ => _
+    }
+    setTimeout(k)
+
+    buckets.get(k) match {
+      case Some(bucket) => bucket.tryConsume(tokenInNeed)
       case _ =>
         val bucket = new MemBasedTokenBucket(capacity, interval, minInterval, unit, payForFailedTry)
         buckets(k) = bucket
-        timeouts(k) = scheduler.scheduleOnce(FiniteDuration(interval, unit))(buckets.remove(k))
         bucket.tryConsume(tokenInNeed)
     }
   }
