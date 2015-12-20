@@ -63,7 +63,7 @@ class GroupedRedisBasedTokenBucket(namespace: String, capacity: Int, interval: L
 }
 
 class RedisBasedTokenBucket(capacity: Int, interval: Long, minInterval: Long, unit: TimeUnit, redis: RedisClient)(implicit exec: ExecutionContext) extends TokenBucket {
-  private val bucket = new GroupedRedisBasedTokenBucket("default", capacity, interval, minInterval, unit, redis)
+  private val bucket = new GroupedMemBasedTokenBucket("default", capacity, interval, minInterval, unit, redis)
 
   override def tryConsume(tokenInNeed: Int): Boolean = {
     bucket.tryConsume("default")

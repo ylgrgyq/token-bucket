@@ -12,8 +12,8 @@ import scala.collection.JavaConverters._
   * Author: ylgrgyq
   */
 
-class GroupedRedisBasedTokenBucket(namespace: String, capacity: Int, interval: Long, minInterval: Long = 0, unit: TimeUnit = TimeUnit.SECONDS, payForFailedTry: Boolean = true)
-                                  (implicit scheduler: Scheduler) extends GropuedTokenBucket {
+class GroupedMemBasedTokenBucket(namespace: String, capacity: Int, interval: Long, minInterval: Long = 0, unit: TimeUnit = TimeUnit.SECONDS, payForFailedTry: Boolean = true)
+                                (implicit scheduler: Scheduler) extends GropuedTokenBucket {
   require(capacity > 0, "Bucket Capacity should bigger than 0")
   require(interval > 0, "Interval time should bigger than 0")
   require(minInterval >= 0, "Minimum interval time should not negative")
