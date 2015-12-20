@@ -14,6 +14,11 @@ import scala.collection.JavaConverters._
 
 class GroupedRedisBasedTokenBucket(namespace: String, capacity: Int, interval: Long, minInterval: Long = 0, unit: TimeUnit = TimeUnit.SECONDS, payForFailedTry: Boolean = true)
                                   (implicit scheduler: Scheduler) extends GropuedTokenBucket {
+  require(capacity > 0, "Bucket Capacity should bigger than 0")
+  require(interval > 0, "Interval time should bigger than 0")
+  require(minInterval >= 0, "Minimum interval time should not negative")
+  require(unit != null, "Please give me time unit for parameter minInterval and interval")
+
   private val buckets = new ConcurrentHashMap[String, MemBasedTokenBucket]().asScala
   private val timeouts = new ConcurrentHashMap[String, Cancellable]().asScala
 
@@ -27,6 +32,8 @@ class GroupedRedisBasedTokenBucket(namespace: String, capacity: Int, interval: L
   }
 
   override def tryConsume(id: String, tokenInNeed: Int): Boolean = this.synchronized {
+    require(tokenInNeed > 0)
+
     val k = key(id)
 
     timeouts.get(k) match {
