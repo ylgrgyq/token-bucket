@@ -17,7 +17,7 @@ import scala.concurrent.Await
   * Author: ylgrgyq
   */
 @RunWith(classOf[JUnitRunner])
-class RedisBasedTokenBucketSuite extends FunSuite{
+class GroupedRedisBasedTokenBucketSuite extends FunSuite{
   test(""){
 
 
@@ -27,8 +27,14 @@ class RedisBasedTokenBucketSuite extends FunSuite{
     import scala.concurrent.duration._
 
     val redis = RedisClient()
-    val bucket = new RedisBasedTokenBucket("hahaha", 20, 1, TimeUnit.MINUTES, 20, redis)
-    assert(bucket.tryConsume())
+//    val bucket = new RedisBasedTokenBucket("hahaha", 20, 1, TimeUnit.MINUTES, 20, redis)
+//    assert(bucket.tryConsume())
+
+    val a = 7L
+    val b = 3L
+    println(a / b)
+    println(Math.ceil(a.toDouble / b))
+    println(Math.ceil(a.toDouble / b).toLong)
   }
 }
 

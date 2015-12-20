@@ -6,60 +6,58 @@ import org.scalatest.FunSuite
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
-import scala.util.Random
-
 @RunWith(classOf[JUnitRunner])
-class MemoryBasedTokenBucketSuite extends FunSuite {
+class MemBasedTokenBucketSuite extends FunSuite {
 
   trait TestBucket {
     val (capacity, interval, u) = (30, 3, TimeUnit.SECONDS)
-    val v = new MemoryBasedTokenBucket(capacity, interval, unit = TimeUnit.SECONDS)
+    val v = new MemBasedTokenBucket(capacity, interval, unit = TimeUnit.SECONDS)
   }
 
   trait WithMinIntervalTestBucket extends TestBucket {
     val minInter = 1
-    override val v = new MemoryBasedTokenBucket(capacity, interval, minInterval = minInter, unit = TimeUnit.SECONDS)
+    override val v = new MemBasedTokenBucket(capacity, interval, minInterval = minInter, unit = TimeUnit.SECONDS)
   }
 
   test("negative capacity") {
     val (capacity, interval) = (-1, 1)
     intercept[IllegalArgumentException] {
-      new MemoryBasedTokenBucket(capacity, interval)
+      new MemBasedTokenBucket(capacity, interval)
     }
   }
 
   test("zero capacity") {
     val (capacity, interval) = (0, 1)
     intercept[IllegalArgumentException] {
-      new MemoryBasedTokenBucket(capacity, interval)
+      new MemBasedTokenBucket(capacity, interval)
     }
   }
 
   test("negative interval"){
     val (capacity, interval) = (1, -1)
     intercept[IllegalArgumentException] {
-      new MemoryBasedTokenBucket(capacity, interval)
+      new MemBasedTokenBucket(capacity, interval)
     }
   }
 
   test("zero interval") {
     val (capacity, interval) = (1, 0)
     intercept[IllegalArgumentException] {
-      new MemoryBasedTokenBucket(capacity, interval)
+      new MemBasedTokenBucket(capacity, interval)
     }
   }
 
   test("negative minInterval"){
     val (capacity, interval, minInterval) = (1, 1, -1)
     intercept[IllegalArgumentException] {
-      new MemoryBasedTokenBucket(capacity, interval, minInterval = minInterval)
+      new MemBasedTokenBucket(capacity, interval, minInterval = minInterval)
     }
   }
 
   test("null time unit"){
     val (capacity, interval, u) = (1, 1, null)
     intercept[IllegalArgumentException] {
-      new MemoryBasedTokenBucket(capacity, interval, unit = u)
+      new MemBasedTokenBucket(capacity, interval, unit = u)
     }
   }
 
@@ -132,7 +130,7 @@ class MemoryBasedTokenBucketSuite extends FunSuite {
       }
 
       u.sleep(interval / 2)
-      assert(!v.tryConsume())
+      assert(! v.tryConsume())
     }
   }
 }

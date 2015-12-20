@@ -6,7 +6,7 @@ import java.util.concurrent.TimeUnit
   * Created on 15/12/3.
   * Author: ylgrgyq
   */
-class MemoryBasedTokenBucket(capacity: Int, interval: Long, minInterval: Long = 0, unit: TimeUnit = TimeUnit.SECONDS, payForFailedTry: Boolean = true) extends TokenBucket {
+class MemBasedTokenBucket(capacity: Int, interval: Long, minInterval: Long = 0, unit: TimeUnit = TimeUnit.SECONDS, payForFailedTry: Boolean = true) extends TokenBucket {
   require(capacity > 0, "Bucket Capacity should bigger than 0")
   require(interval > 0, "Interval time should bigger than 0")
   require(minInterval >= 0, "Minimum interval time should not negative")
@@ -46,4 +46,6 @@ class MemoryBasedTokenBucket(capacity: Int, interval: Long, minInterval: Long = 
       }
     }
   }
+
+  override def isBucketFull(): Boolean = tokensCount == capacity
 }
