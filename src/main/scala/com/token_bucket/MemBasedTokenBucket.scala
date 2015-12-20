@@ -1,11 +1,50 @@
 package com.token_bucket
 
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
+
+import akka.actor.{Cancellable, Scheduler}
+
+import scala.concurrent.duration.FiniteDuration
+import scala.collection.JavaConverters._
 
 /**
   * Created on 15/12/3.
   * Author: ylgrgyq
   */
+
+class GroupedRedisBasedTokenBucket(namespace: String, capacity: Int, interval: Long, minInterval: Long = 0, unit: TimeUnit = TimeUnit.SECONDS, payForFailedTry: Boolean = true)
+                                  (implicit scheduler: Scheduler) extends GropuedTokenBucket {
+  private val buckets = new ConcurrentHashMap[String, MemBasedTokenBucket]().asScala
+  private val timeouts = collection.mutable.Map[String, Cancellable]()
+
+  def key(id: String) = s"$namespace-$id"
+
+  override def tryConsume(id: String, tokenInNeed: Int): Boolean = this.synchronized {
+    val k = key(id)
+    buckets.get(k) match {
+      case Some(bucket) =>
+        timeouts.get(k) match {
+          case Some(cancelHandle) => cancelHandle.cancel()
+          case _ => _
+        }
+
+        bucket.tryConsume(tokenInNeed)
+      case _ =>
+        val bucket = new MemBasedTokenBucket(capacity, interval, minInterval, unit, payForFailedTry)
+        buckets(k) = bucket
+        timeouts(k) = scheduler.scheduleOnce(FiniteDuration(interval, unit))(buckets.remove(k))
+        bucket.tryConsume(tokenInNeed)
+    }
+  }
+
+  override def isBucketFull(id: String): Boolean = this.synchronized {
+    buckets.get(key(id)) match {
+      case Some(bucket) => bucket.isBucketFull()
+      case _ => false
+    }
+  }
+}
+
 class MemBasedTokenBucket(capacity: Int, interval: Long, minInterval: Long = 0, unit: TimeUnit = TimeUnit.SECONDS, payForFailedTry: Boolean = true) extends TokenBucket {
   require(capacity > 0, "Bucket Capacity should bigger than 0")
   require(interval > 0, "Interval time should bigger than 0")
@@ -47,5 +86,5 @@ class MemBasedTokenBucket(capacity: Int, interval: Long, minInterval: Long = 0, 
     }
   }
 
-  override def isBucketFull(): Boolean = tokensCount == capacity
+  override def isBucketFull(): Boolean = this.synchronized(tokensCount == capacity)
 }

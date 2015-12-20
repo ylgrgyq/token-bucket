@@ -79,8 +79,7 @@ class MemBasedTokenBucketSuite extends FunSuite {
 
   test("tryConsume return false after buckets is drained") {
     new TestBucket {
-      val range = new Range(0, capacity, 1)
-      for (i <- range) {
+      for (i <- 0 to capacity) {
         assert(v.tryConsume())
       }
 
