@@ -6,11 +6,13 @@ import org.scalatest.FunSuite
 import org.junit.runner.RunWith
 import org.scalatest.junit.JUnitRunner
 
+import scala.util.Random
+
 @RunWith(classOf[JUnitRunner])
 class MemoryBasedTokenBucketSuite extends FunSuite {
 
   trait TestBucket {
-    val (capacity, interval, u) = (30, 5, TimeUnit.SECONDS)
+    val (capacity, interval, u) = (30, 3, TimeUnit.SECONDS)
     val v = new MemoryBasedTokenBucket(capacity, interval, unit = TimeUnit.SECONDS)
   }
 
@@ -79,7 +81,7 @@ class MemoryBasedTokenBucketSuite extends FunSuite {
 
   test("tryConsume return false after buckets is drained") {
     new TestBucket {
-      val range = new Range(0, 30, 1)
+      val range = new Range(0, capacity, 1)
       for (i <- range) {
         assert(v.tryConsume())
       }
@@ -90,7 +92,7 @@ class MemoryBasedTokenBucketSuite extends FunSuite {
 
   test("drain bucket then wait half interval the bucket should refill some tokens") {
     new TestBucket {
-      val range = new Range(0, 30, 1)
+      val range = new Range(0, capacity, 1)
       for (i <- range) {
         assert(v.tryConsume())
       }
@@ -116,6 +118,21 @@ class MemoryBasedTokenBucketSuite extends FunSuite {
       assert(v.tryConsume())
       TimeUnit.SECONDS.sleep(1)
       assert(v.tryConsume())
+    }
+  }
+
+  test("drain bucket twice then wait half of interval leave half capacity debt to pay") {
+    new TestBucket {
+      for (i <- new Range(0, capacity, 1)) {
+        assert(v.tryConsume())
+      }
+
+      for (i <- new Range(0, capacity, 1)) {
+        assert(! v.tryConsume())
+      }
+
+      u.sleep(interval / 2)
+      assert(!v.tryConsume())
     }
   }
 }
