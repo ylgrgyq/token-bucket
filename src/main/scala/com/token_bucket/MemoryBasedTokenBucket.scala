@@ -6,12 +6,12 @@ import java.util.concurrent.TimeUnit
   * Created on 15/12/3.
   * Author: ylgrgyq
   */
-class MemoryBasedTokenBucket(capacity: Int, minInterval: Long, interval: Long, unit: TimeUnit) extends TokenBucket {
-  private val tokenSupplyPolicy = new FixedRateTokenSupplyPolicy(Math.ceil(capacity.toDouble / interval).toLong, interval, unit)
-
+class MemoryBasedTokenBucket(capacity: Int, interval: Long, minInterval: Long = 0, unit: TimeUnit = TimeUnit.SECONDS) extends TokenBucket {
   require(capacity > 0, "Bucket Capacity should bigger than 0")
   require(minInterval >= 0, "Minimum interval time should not negative")
-  require(tokenSupplyPolicy != null, "Please give me a token supply policy")
+  require(interval >= 0, "Interval should not negative")
+
+  private val tokenSupplyPolicy = new FixedRateTokenSupplyPolicy(Math.ceil(capacity.toDouble / interval).toLong, 1, unit)
 
   private var tokensCount = capacity
   private var lastConsumeTime = 0L
@@ -27,7 +27,7 @@ class MemoryBasedTokenBucket(capacity: Int, minInterval: Long, interval: Long, u
     require(tokenInNeed > 0)
 
     val now = System.nanoTime()
-    if (now - lastConsumeTime < minInterval) {
+    if (minInterval != 0 && now - lastConsumeTime < minInterval) {
       false
     } else {
       refill(now, tokenSupplyPolicy.supplyToken(now))

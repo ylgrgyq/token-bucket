@@ -14,14 +14,14 @@ import scala.concurrent.{Await, ExecutionContext, Future}
   * Author: ylgrgyq
   */
 
-class RedisBasedTokenBucket(namespace: String, id: String, capacity: Int, interval: Long, minInterval: Long, unit: TimeUnit, redis: RedisClient) extends TokenBucket{
+class RedisBasedTokenBucket(namespace: String, id: String, capacity: Int, interval: Long, minInterval: Long, unit: TimeUnit, redis: RedisClient)(implicit exec: ExecutionContext) extends TokenBucket{
   private val redisKey = s"$namespace-$id"
 
-  def tryConsume(tokenInNeed: Int) = {
+  override def tryConsume(tokenInNeed: Int) = {
     throw new UnsupportedOperationException
   }
 
-  def tryConsume()(implicit exec: ExecutionContext): Boolean = {
+  override def tryConsume(): Boolean = {
     val now = System.nanoTime()
     val lowerWindowEdge = now - unit.toNanos(interval)
 

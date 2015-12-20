@@ -17,7 +17,7 @@ class FixedRateTokenSupplyPolicy(tokensPerPeriod: Long, period: Long, unit: Time
   def tankNotFull(now: Long) = {
     require(now > 0, "now should not be negative")
 
-    lastFillTime = now
+    if (lastFillTime == 0) lastFillTime = now
   }
 
   def tankFull(now: Long) = {
@@ -32,10 +32,10 @@ class FixedRateTokenSupplyPolicy(tokensPerPeriod: Long, period: Long, unit: Time
     if (lastFillTime == 0) {
       0
     } else {
-      val periods = math.min(0, ((now - lastFillTime) / periodInNano).toInt)
+      val periods = math.max(0, ((now - lastFillTime) / periodInNano).toInt)
 
       val tokensSupplied = periods * tokensPerPeriod
-      lastFillTime += periods * period
+      lastFillTime += periods * periodInNano
 
       tokensSupplied.toInt
     }
