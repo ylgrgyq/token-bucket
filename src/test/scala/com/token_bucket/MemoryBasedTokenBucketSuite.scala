@@ -61,6 +61,22 @@ class MemoryBasedTokenBucketSuite extends FunSuite {
     }
   }
 
+  test("try consume zero tokens"){
+    new TestBucket {
+      intercept[IllegalArgumentException] {
+        v.tryConsume(0)
+      }
+    }
+  }
+
+  test("try consume negative tokens"){
+    new TestBucket {
+      intercept[IllegalArgumentException] {
+        v.tryConsume(-1)
+      }
+    }
+  }
+
   test("tryConsume return false after buckets is drained") {
     new TestBucket {
       val range = new Range(0, 30, 1)
