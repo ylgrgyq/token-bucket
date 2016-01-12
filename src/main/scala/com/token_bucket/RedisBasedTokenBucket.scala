@@ -14,7 +14,8 @@ import scala.concurrent.{Await, ExecutionContext, Future}
   * Author: ylgrgyq
   */
 
-class GroupedRedisBasedTokenBucket(redis: RedisClient, namespace: String, capacity: Int, interval: Long, unit: TimeUnit = TimeUnit.SECONDS, minInterval: Long = 0)(implicit exec: ExecutionContext) extends GropuedTokenBucket{
+class RedisBasedTokenBucket(redis: RedisClient, namespace: String, capacity: Int, interval: Long, unit: TimeUnit = TimeUnit.SECONDS, minInterval: Long = 0)
+                           (implicit exec: ExecutionContext) extends GropuedTokenBucket{
   override def tryConsume(id: String, tokenInNeed: Int) = {
     throw new UnsupportedOperationException
   }
@@ -59,17 +60,5 @@ class GroupedRedisBasedTokenBucket(redis: RedisClient, namespace: String, capaci
       yield t == 0
 
     Await.result(ret, 5.seconds)
-  }
-}
-
-class RedisBasedTokenBucket(redis: RedisClient, capacity: Int, interval: Long, unit: TimeUnit = TimeUnit.SECONDS, minInterval: Long = 0)(implicit exec: ExecutionContext) extends TokenBucket {
-  private val bucket = new GroupedRedisBasedTokenBucket(redis, "default", capacity, interval, unit, minInterval)
-
-  override def tryConsume(tokenInNeed: Int): Boolean = {
-    bucket.tryConsume("default")
-  }
-
-  override def isBucketFull(): Boolean = {
-    bucket.isBucketFull("default")
   }
 }

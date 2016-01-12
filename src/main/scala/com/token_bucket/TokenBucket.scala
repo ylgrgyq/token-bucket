@@ -5,9 +5,6 @@ package com.token_bucket
   * Author: ylgrgyq
   */
 trait TokenBucket {
-
-  def tryConsume(): Boolean = tryConsume(1)
-
   def tryConsume(tokenInNeed: Int): Boolean
 
   def isBucketFull(): Boolean
