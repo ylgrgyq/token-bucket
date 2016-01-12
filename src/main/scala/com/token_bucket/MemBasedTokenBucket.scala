@@ -16,13 +16,13 @@ class MemBasedTokenBucket(capacity: Int, interval: Long, unit: TimeUnit, minInte
 
   private var tokensCount = capacity
   private var lastConsumeTime = 0L
+  private var lastFillTime = 0L
   private val minIntervalInNanos = unit.toNanos(minInterval)
 
   private def refill(now: Long, tokensSupplied: Int) = {
     tokensCount = math.min(capacity, tokensSupplied + tokensCount)
-    if (tokensCount == capacity) {
-      tokenSupplyPolicy.tankFull(now)
-    }
+
+    if (tokensCount == capacity) lastFillTime = 0
   }
 
   override def tryConsume(tokenInNeed: Int = 1) = this.synchronized {
@@ -33,11 +33,13 @@ class MemBasedTokenBucket(capacity: Int, interval: Long, unit: TimeUnit, minInte
     if (minIntervalInNanos != 0 && now - lastConsumeTime < minIntervalInNanos) {
       false
     } else {
-      refill(now, tokenSupplyPolicy.supplyToken(now))
+      val (suppliedToken, newFillTime) = tokenSupplyPolicy.supplyToken(now, lastFillTime)
+      lastFillTime = newFillTime
+      refill(now, suppliedToken)
 
       if (tokensCount >= tokenInNeed) {
         tokensCount -= tokenInNeed
-        tokenSupplyPolicy.tankNotFull(now)
+        if (lastFillTime == 0) lastFillTime = now
         lastConsumeTime = now
         true
       } else {

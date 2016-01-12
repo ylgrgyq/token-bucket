@@ -12,32 +12,18 @@ class FixedRateTokenSupplyPolicy(tokensPerPeriod: Long, period: Long, unit: Time
   require(unit != null)
 
   val periodInNano = unit.toNanos(period)
-  var lastFillTime: Long = 0
 
-  def tankNotFull(now: Long) = {
-    require(now > 0, "now should not be negative")
-
-    if (lastFillTime == 0) lastFillTime = now
-  }
-
-  def tankFull(now: Long) = {
-    require(now > 0, "now should not be negative")
-
-    lastFillTime = 0
-  }
-
-  def supplyToken(now: Long): Int = {
+  def supplyToken(now: Long, lastFillTime: Long): (Int, Long) = {
     require(now > 0, "now should not be negative")
 
     if (lastFillTime == 0) {
-      0
+      (0, lastFillTime)
     } else {
       val periods = math.max(0, ((now - lastFillTime) / periodInNano).toInt)
 
       val tokensSupplied = periods * tokensPerPeriod
-      lastFillTime += periods * periodInNano
 
-      tokensSupplied.toInt
+      (tokensSupplied.toInt, lastFillTime + periods * periodInNano)
     }
   }
 }
