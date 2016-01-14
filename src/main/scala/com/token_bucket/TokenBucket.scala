@@ -7,6 +7,8 @@ package com.token_bucket
 trait TokenBucket {
   def tryConsume(tokenInNeed: Int): Boolean
 
+  def tokensCount(): Int
+
   def isBucketFull(): Boolean
 }
 

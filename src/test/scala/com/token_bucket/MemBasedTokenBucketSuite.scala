@@ -10,54 +10,54 @@ import org.scalatest.junit.JUnitRunner
 class MemBasedTokenBucketSuite extends FunSuite {
 
   trait TestBucket {
-    val (capacity, interval, u) = (30, 3, TimeUnit.SECONDS)
-    val v = new MemBasedTokenBucket(capacity, interval, unit = TimeUnit.SECONDS)
+    val (capacity, tokensPerInterval, interval, u) = (30, 10, 3, TimeUnit.SECONDS)
+    val v = MemBasedTokenBucket.MemBasedTokenBucketBuilder().capacity(capacity).tokensPerInterval(tokensPerInterval).interval(interval, u).payForFailedTry(false).build()
   }
 
   trait WithMinIntervalTestBucket extends TestBucket {
     val minInter = 1
-    override val v = new MemBasedTokenBucket(capacity, interval, minInterval = minInter, unit = TimeUnit.SECONDS)
+    override val v = new MemBasedTokenBucket.MemBasedTokenBucketBuilder().capacity(capacity).interval(interval, TimeUnit.SECONDS).minInterval(minInter, TimeUnit.SECONDS).build()
   }
 
   test("negative capacity") {
     val (capacity, interval) = (-1, 1)
     intercept[IllegalArgumentException] {
-      new MemBasedTokenBucket(capacity, interval)
+      new MemBasedTokenBucket.MemBasedTokenBucketBuilder().capacity(capacity).interval(interval)
     }
   }
 
   test("zero capacity") {
     val (capacity, interval) = (0, 1)
     intercept[IllegalArgumentException] {
-      new MemBasedTokenBucket(capacity, interval)
+      new MemBasedTokenBucket.MemBasedTokenBucketBuilder().capacity(capacity).interval(interval)
     }
   }
 
   test("negative interval"){
     val (capacity, interval) = (1, -1)
     intercept[IllegalArgumentException] {
-      new MemBasedTokenBucket(capacity, interval)
+      new MemBasedTokenBucket.MemBasedTokenBucketBuilder().capacity(capacity).interval(interval)
     }
   }
 
   test("zero interval") {
     val (capacity, interval) = (1, 0)
     intercept[IllegalArgumentException] {
-      new MemBasedTokenBucket(capacity, interval)
+      new MemBasedTokenBucket.MemBasedTokenBucketBuilder().capacity(capacity).interval(interval)
     }
   }
 
   test("negative minInterval"){
     val (capacity, interval, minInterval) = (1, 1, -1)
     intercept[IllegalArgumentException] {
-      new MemBasedTokenBucket(capacity, interval, minInterval = minInterval)
+      new MemBasedTokenBucket.MemBasedTokenBucketBuilder().capacity(capacity).interval(interval).minInterval(minInterval)
     }
   }
 
   test("null time unit"){
     val (capacity, interval, u) = (1, 1, null)
     intercept[IllegalArgumentException] {
-      new MemBasedTokenBucket(capacity, interval, unit = u)
+      new MemBasedTokenBucket.MemBasedTokenBucketBuilder().capacity(capacity).interval(interval, u)
     }
   }
 
@@ -79,7 +79,7 @@ class MemBasedTokenBucketSuite extends FunSuite {
 
   test("tryConsume return false after buckets is drained") {
     new TestBucket {
-      for (i <- 0 to capacity) {
+      for (i <- 0 until capacity) {
         assert(v.tryConsume())
       }
 
@@ -87,7 +87,7 @@ class MemBasedTokenBucketSuite extends FunSuite {
     }
   }
 
-  test("drain bucket then wait half interval the bucket should refill some tokens") {
+  test("drain bucket then wait an interval the bucket should refill tokenPerPeriod tokens") {
     new TestBucket {
       val range = new Range(0, capacity, 1)
       for (i <- range) {
@@ -96,8 +96,8 @@ class MemBasedTokenBucketSuite extends FunSuite {
 
       assert(!v.tryConsume())
 
-      TimeUnit.NANOSECONDS.sleep(TimeUnit.SECONDS.toNanos(interval / 2))
-      for (i <- new Range(1, (((interval / 2).toDouble / interval) * capacity).toInt, 1)) {
+      TimeUnit.NANOSECONDS.sleep(TimeUnit.SECONDS.toNanos(interval))
+      for (i <- 0 until tokensPerInterval){
         assert(v.tryConsume())
       }
 
@@ -120,11 +120,11 @@ class MemBasedTokenBucketSuite extends FunSuite {
 
   test("drain bucket twice then wait half of interval leave half capacity debt to pay") {
     new TestBucket {
-      for (i <- new Range(0, capacity, 1)) {
+      for (i <- 0 until capacity) {
         assert(v.tryConsume())
       }
 
-      for (i <- new Range(0, capacity, 1)) {
+      for (i <- 0 until capacity) {
         assert(! v.tryConsume())
       }
 
