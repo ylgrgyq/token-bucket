@@ -13,8 +13,6 @@ class FixedRateTokenSupplyPolicy(tokensPerPeriod: Int, period: Long, unit: TimeU
 
   val periodInNano = unit.toNanos(period)
 
-  println(s"tokens per period: $tokensPerPeriod period: $period")
-
   def supplyToken(now: Long, lastFillTime: Long): (Int, Long) = {
     require(now > 0, "now should not be negative")
 

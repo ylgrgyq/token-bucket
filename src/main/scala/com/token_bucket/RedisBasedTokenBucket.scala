@@ -6,8 +6,7 @@ import akka.util.ByteString
 import redis.RedisClient
 import redis.api.Limit
 
-import scala.concurrent.duration._
-import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * Created on 15/12/14.
@@ -15,14 +14,10 @@ import scala.concurrent.{Await, ExecutionContext, Future}
   */
 
 class RedisBasedTokenBucket(redis: RedisClient, namespace: String, capacity: Int, interval: Long, unit: TimeUnit = TimeUnit.SECONDS, minInterval: Long = 0)
-                           (implicit exec: ExecutionContext) extends GropuedTokenBucket{
-  override def tryConsume(id: String, tokenInNeed: Int) = {
-    throw new UnsupportedOperationException
-  }
-
+                           (implicit exec: ExecutionContext){
   def key(id: String) = s"$namespace-$id"
 
-  override def tryConsume(id: String): Boolean = {
+  def tryConsume(id: String):  Future[Boolean] = {
     val now = System.nanoTime()
     val lowerWindowEdge = now - unit.toNanos(interval)
 
@@ -34,19 +29,16 @@ class RedisBasedTokenBucket(redis: RedisClient, namespace: String, capacity: Int
     transaction.expire(id, unit.toSeconds(interval))
     transaction.exec()
 
-    val ret:Future[Boolean] =
-      for {
-        t <- total
-        last <- lastReqTime
-      } yield {
-        if (last.nonEmpty) t < capacity && (now - last.head.utf8String.toLong) >= unit.toNanos(minInterval)
-        else t < capacity
-      }
-
-    Await.result(ret, 5.seconds)
+    for {
+      t <- total
+      last <- lastReqTime
+    } yield {
+      if (last.nonEmpty) t < capacity && (now - last.head.utf8String.toLong) >= unit.toNanos(minInterval)
+      else t < capacity
+    }
   }
 
-  override def isBucketFull(id: String): Boolean = {
+  def isBucketFull(id: String): Future[Boolean] = {
     val now = System.nanoTime()
     val lowerWindowEdge = now - unit.toNanos(interval)
 
@@ -55,10 +47,7 @@ class RedisBasedTokenBucket(redis: RedisClient, namespace: String, capacity: Int
     val total = transaction.zcard(id)
     transaction.exec()
 
-    val ret:Future[Boolean] =
-      for (t <- total)
+    for (t <- total)
       yield t == 0
-
-    Await.result(ret, 5.seconds)
   }
 }

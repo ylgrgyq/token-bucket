@@ -17,7 +17,7 @@ import scala.concurrent.Await
   * Author: ylgrgyq
   */
 @RunWith(classOf[JUnitRunner])
-class GroupedRedisBasedTokenBucketSuite extends FunSuite {
+class RedisBasedTokenBucketSuite extends FunSuite {
   test("") {
 
 
